@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import Searchbar from 'components/Searchbar';
 import ImageGallery from 'components/ImageGallery';
 import Button from 'components/Button';
@@ -14,78 +14,62 @@ const AppContainer = styled.div`
   padding-bottom: 24px;
 `;
 
-export class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    page: 1,
-    showModal: false,
-    selectedImage: '',
-    isLoading: false,
-    showBtn: false,
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showBtn, setShowBtn] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, [query, page]);
+
+  const handleSubmit = (newQuery) => {
+    setQuery(newQuery);
+    setPage(1);
+    setImages([]);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
+  const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
 
-    if (prevState.query !== query || prevState.page !== page) {
-      this.fetchData();
+  const handleImageClick = (image) => {
+    setShowModal(true);
+    setSelectedImage(image);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedImage('');
+  };
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const { hits: newImages, totalHits } = await fetchData(query, page);
+
+      setImages((prevImages) => [...prevImages, ...newImages]);
+      setShowBtn(page < Math.ceil(totalHits / 12));
+    } catch (error) {
+      console.error('Error in fetchData:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }
-
-  handleSubmit = (query) => {
-    this.setState({ query, page: 1, images: [] });
   };
-  handleLoadMore = () => {
-    this.setState((prevState) => ({ page: prevState.page + 1 }));
-  };
-
-
-  handleImageClick = (selectedImage) => {
-    this.setState({ showModal: true, selectedImage });
-  };
-
-  handleCloseModal = () => {
-    this.setState({ showModal: false, selectedImage: '' });
-  };
-
-  fetchData = async () => {
-  const { query, page } = this.state;
-
-  try {
-    this.setState({ isLoading: true });
-    const { hits: newImages, totalHits } = await fetchData(query, page);
-
-    this.setState((prevState) => ({
-      images: [...prevState.images, ...newImages],
-      showBtn: page < Math.ceil(totalHits / 12),
-    }));
-  } catch (error) {
-    console.error('Error in fetchData:', error);
-  } finally {
-    this.setState({ isLoading: false });
-  }
-};
-
-
-
-render() {
-  const { images, showModal, selectedImage, isLoading, showBtn } = this.state;
 
   return (
     <AppContainer>
-      <Searchbar onSubmit={this.handleSubmit} />
-      <ImageGallery images={images} onImageClick={this.handleImageClick} />
-      {images.length > 0 && !isLoading && showBtn && (
-        <Button onLoadMore={this.handleLoadMore} />
-      )}
+      <Searchbar onSubmit={handleSubmit} />
+      <ImageGallery images={images} onImageClick={handleImageClick} />
+      {images.length > 0 && !isLoading && showBtn && <Button onLoadMore={handleLoadMore} />}
       {isLoading && <Loader />}
-      {showModal && (
-        <Modal imageURL={selectedImage.largeImageURL} onClose={this.handleCloseModal} />
-      )}
+      {showModal && <Modal imageURL={selectedImage.largeImageURL} onClose={handleCloseModal} />}
     </AppContainer>
   );
-}
-}
+};
 
 export default App;
