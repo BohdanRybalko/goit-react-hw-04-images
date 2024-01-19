@@ -24,7 +24,23 @@ export const App = () => {
   const [showBtn, setShowBtn] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    const fetchDataFromApi = async () => {
+      try {
+        setIsLoading(true);
+        const { hits: newImages, totalHits } = await fetchData(query, page);
+
+        setImages((prevImages) => [...prevImages, ...newImages]);
+        setShowBtn(page < Math.ceil(totalHits / 12));
+      } catch (error) {
+        console.error('Error in fetchData:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (query) {
+      fetchDataFromApi();
+    }
   }, [query, page]);
 
   const handleSubmit = (newQuery) => {
@@ -37,28 +53,14 @@ export const App = () => {
     setPage((prevPage) => prevPage + 1);
   };
 
-  const handleImageClick = (image) => {
+  const handleImageClick = (clickedImage) => {
     setShowModal(true);
-    setSelectedImage(image);
+    setSelectedImage(clickedImage);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedImage('');
-  };
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const { hits: newImages, totalHits } = await fetchData(query, page);
-
-      setImages((prevImages) => [...prevImages, ...newImages]);
-      setShowBtn(page < Math.ceil(totalHits / 12));
-    } catch (error) {
-      console.error('Error in fetchData:', error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
