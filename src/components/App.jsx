@@ -5,14 +5,7 @@ import Button from 'components/Button';
 import Loader from 'components/Loader';
 import Modal from 'components/Modal';
 import { fetchData } from 'components/Api';
-import styled from 'styled-components';
-
-const AppContainer = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-gap: 16px;
-  padding-bottom: 24px;
-`;
+import { AppContainer } from './AppStyles';
 
 export const App = () => {
   const [images, setImages] = useState([]);
